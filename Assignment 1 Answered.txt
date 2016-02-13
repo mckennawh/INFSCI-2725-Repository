@@ -1,0 +1,96 @@
+﻿Assignment 1: Storage and processing of data
+
+
+MongoDB (help link: http://www.mongodb.org/display/DOCS/Home)
+
+We have provided a data set which consists of 10 million ratings and 100,000 tag applications applied to 10,000 movies by 72,000 users.
+
+Design data structures to represent the data (you might have one document that stores all information aggregated under user object or one document that stores information
+	about aggregate under move object, or split into two or tree aggregations).
+
+
+Your models should be able to answer the following queries below.
+
+Create a data store. Extract, transform and load the provided data set into your data storage.
+Answer the following questions.
+
+Questions:
+
+1)What genre is the movie CopyCat in?
+
+	Query: db.movies.find({title: /Copycat/}, {_id: 0, title: 1, genres: 1})
+
+	Answer: Crime, Drama, Horror, Mystery, Thriller
+
+2)what genre has the most movies?
+	
+	Query:	db.genres.aggregate([
+                     { $group: { _id: "$genres", total: { $sum: 1 } } },
+                     { $sort: { total: -1 } }
+                   ])
+
+	Answer: Drama - 5,339 movies
+
+
+3)what tags did user 146 use to describe the movie "2001: A Space Odyssey”
+
+	Query1: db.movies.find({title: /2001:/}, {_id: 0, title: 1, movieID: 1})
+	Query2: db.tags.find({userID: "146", movieId: "924"}, {_id: 0, userID: 1, movieId: 1, tag: 1})
+
+	Answer: Arthur C. clarke, artificial intelligence, based on a book
+
+4)What are the top 5 movies with the highest avg rating?  
+
+	Query1: db.ratings.aggregate([{ $group: { _id: "$movieId", avgRating: { $avg: "$rating" }, numRating: { $sum: 1} } }, { $sort: { avgRating: -1 } } ])
+	Query2: db.movies.find({"movieId": { $in: ["42783", "51209", "53355", "33264", "64275"]}}, {_id: 0, movieId: 1, title: 1})
+
+	Answer: a) Satan's Tango (Satantango) (1994)
+		b) Shadows of Forgotten Ancestors (1964)
+		c) Fighting Elegy (Kenka erejii) (1966)
+		d) Sun Alley (Sonnenallee) (1999)
+		e) Blue Light, The (Das Blaue Licht) (1932)
+
+5)What is the highest avg rating possible?
+
+	Query1: db.ratings.aggregate([{ $group: { _id: "$movieId", avgRating: { $avg: "$rating" }, numRating: { $sum: 1} } }, { $match: {avgRating:5}}])
+
+	Answer:	5
+
+5) Write 3 different queries of your choice to demonstrate that your data storage is working. 
+
+	a) What movie has been rated the most?
+		Query1: db.ratings.aggregate([{ $group: { _id: "$movieId", numRating: { $sum: 1} } }, { $sort: { numRating: -1 } } ])
+		Query2: db.movies.find({"movieId": "296"}, {_id: 0, movieId: 1, title: 1})
+
+		Answer: Pulp Fiction (1994)
+
+	b) Which movies have been tagged with the words "the worst"?
+		Query1: db.tags.find({tag: /the worst/}, {_id: 0, movieId: 1, tag: 1})
+		Query2: db.movies.find({"movieId": { $in: ["49824", "44199", "19", "1091", "2827", "8641"]}}, {_id: 0, movieId: 1, title: 1})
+	
+		Answer: Ace Ventura: When Nature Calls (1995)
+			Weekend at Bernie's (1989)
+			Astronaut's Wife, The (1999)
+			Anchorman: The Legend of Ron Burgundy (2004)
+			Inside Man (2006)
+			Dreamgirls (2006)
+
+	c) What are the average ratings for the moview tagged with the words "the worst"?
+		Query1: db.ratings.aggregate([{ $match: {"movieId": {$in: ["49824", "44199", "19", "1091", "2827", "8641"]}}}, { $group: { _id: "$movieId", avgRating: { $avg: "$rating" }, numRating: { $sum: 1} } }])
+
+		Answer: Ace Ventura: When Nature Calls (1995) 		2.58	
+			Weekend at Bernie's (1989)			2.76
+			Astronaut's Wife, The (1999)			2.43
+			Anchorman: The Legend of Ron Burgundy (2004)	3.4
+			Inside Man (2006)				3.86
+			Dreamgirls (2006)				3.27
+Hints:
+
+zip file with data has a readme file which contains a description of the data files.
+
+In each of the case, you will need to write a program in a programming language of your choice (one that is, of course, supported by the system). For your information, 
+	Java is supported by both of the systems.  
+
+If you cannot answer one of the 3 specific queries, please write the reasons why you cannot do that. Maybe it is the limit of the data model or data store or query functionality.
+
+You should submit a zip file with your program and a brief document explaining what you did, queries that your asked, and important pats of the results.
